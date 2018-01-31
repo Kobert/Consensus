@@ -126,6 +126,41 @@ double unadjustedScore(char * seq, int** jump_to, int dim, int start, double mat
 }
 
 
+int findNumberOfReplicates(char * seq, int** jump_to, int dim, int start){
+    
+    int i;
+    int pos = start;
+    int number = 0;
+    
+    int * num_hits = (int*)calloc(dim, sizeof(int));
+    
+    for(i = dim-1 ; i >= 0 ; i--){
+        
+        num_hits[pos]++;
+        if(num_hits[pos] > number)
+        {
+            number = num_hits[pos];
+        }
+        
+        if(jump_to[pos][i] > 0){
+         pos = jump_to[pos][i];
+        }else{
+         pos--;   
+        }
+    }
+
+
+    
+    free(num_hits);
+    
+    if(number <= 1)
+    {
+        return 1;
+    }else{
+        return number;
+    }
+}
+
 
 int findStartReplicates(char * seq, int** jump_to, int dim, int start){
     
@@ -417,7 +452,7 @@ int findEndReplicates(char *seq, unsigned int seq_length, double match, double m
     return result;
 }
 
-
+// Finds the consensus of cirseq data reads. Returns the number of replicates found.
 int alignReplicates(char* result, char *seq, unsigned int seq_length){
     
     int i;
@@ -450,142 +485,16 @@ int alignReplicates(char* result, char *seq, unsigned int seq_length){
     
 //     --------------------------------------
     calculateJumpMatrix(seq, seq_length, match, miss, jump, score, jump_to, max, which_max);
-    
-//         int lane;
-//         
-//         double multiplier = 1.0;
-//         
-//         double add = miss;
-// //     Top row initialization
-//     i = 0;
-//     for(j=0; j<seq_length; j++)
-//     {
-//          multiplier = 1.0 + 2*j/(double)seq_length;
-//         if(mapIgnoreDegenerate(seq[i]) == mapIgnoreDegenerate('N') || mapIgnoreDegenerate(seq[j]) == mapIgnoreDegenerate('N'))
-//         {
-//          add = 0;   
-//         }else if(seq[i] == seq[j])
-//         {
-//         add = match*multiplier; 
-//         }else{
-//         add = miss*multiplier;
-//         }
-//         
-//         score[i][j] = add;
-//     }
-//     
-// // Calculating diagonal movement only     
-//     for(i=1; i<seq_length; i++)
-//     {
-// //         Start with diagonal
-//   
-//         for(j=i; j<seq_length; j++)
-//         {
-//          lane = j-i;
-//          assert(lane >= 0);
-//          
-//          multiplier = 1.0 + 2*lane/(double)seq_length;
-//          
-//         if(mapIgnoreDegenerate(seq[i]) == mapIgnoreDegenerate('N') || mapIgnoreDegenerate(seq[j]) == mapIgnoreDegenerate('N'))
-//         {
-//          add = 0;   
-//         }else if(seq[i] == seq[j])
-//             {
-//                 add = match*multiplier; 
-//             }else{
-//                 add = miss*multiplier;
-//             }
-//         
-//           score[i][j] = score[i-1][j-1]+add;
-//         }  
-//     }
-//  
-//      print_selective("%s\n\n",seq);
-// //     printQuadraticMatrix(score, seq_length);
-//     
-//     
-// //     Postprocessing for vertical jumps by looking at each column seperately
-// // Diagonal: 
-//     for(i=0; i<seq_length; i++)
-//     {
-//     max[i] = score[i][i];    
-//     which_max[i] = i;
-//     }
-//     
-// // The rest:    
-//     for(lane=1; lane<seq_length; lane++)
-//     {
-//         
-//         multiplier = 1.0 + 2*lane/(double)seq_length;
-//                  
-//         for(i=0; i<seq_length-lane; i++)
-//         {
-// 
-//          j = i + lane;   
-//          
-//          
-// 
-//         if(mapIgnoreDegenerate(seq[i]) == mapIgnoreDegenerate('N') || mapIgnoreDegenerate(seq[j]) == mapIgnoreDegenerate('N'))
-//         {
-//          add = 0;   
-//         }else if(seq[i] == seq[j])
-//             {
-//                 add = match*multiplier; 
-//             }else{
-//                 add = miss*multiplier;
-//             }
-//          
-// 
-//         if(i>0)
-//         {          
-//             if(score[i-1][j-1] > max[j-1] + jump){
-//                 score[i][j] = score[i-1][j-1] + add;   
-//             }else{
-//                 score[i][j] =   max[j-1] + add + jump;
-//                 jump_to[i][j] = which_max[j-1];
-//             }
-// 
-//          }else{//if i == 0
-//             
-//             if(0 > max[j-1] + jump){
-//                 score[i][j] = 0 + add;   
-//             }else{
-//                 score[i][j] =   max[j-1] + add + jump;
-//                 jump_to[i][j] = which_max[j-1];
-//             }
-//              
-//          }
-//          
-//          
-//          if(score[i][j] > max[j])
-//          {
-//              max[j] = score[i][j];
-//              which_max[j] = i;
-//          }
-// 
-//         }
-//     print_selective("%d $d\n",i,j);
-//     fflush(stderr);
-//     }
-    
-//          print_selective("%s\n\n",seq);
-//     printQuadraticMatrix(score, seq_length);
-
-    
-//     print_selective("%s\n\n",seq);
-//     printQuadraticMatrix(score, seq_length);
-//     print_selective("\n");
-//     printQuadraticMatrixInt(jump_to, seq_length);
-    
-//     printf("last row max: %f at: %i (unadjusted: %f)\n", max[seq_length-1], which_max[seq_length-1], unadjustedScore(seq, jump_to, seq_length, which_max[seq_length-1], match, miss));
  
-    
     
     
 //     printReplicates(seq, jump_to, seq_length, which_max[seq_length-1]);
     
     int start = findStartReplicates(seq, jump_to, seq_length, which_max[seq_length-1]);
     int end   = findEndReplicates(seq, seq_length,  match,  miss,  jump);
+    
+    int replication_number = findNumberOfReplicates(seq, jump_to, seq_length, which_max[seq_length-1]);
+    
     
      char* result_seq = (char*)calloc(seq_length+1, sizeof(char));
     findConsensusReplicates(result_seq, seq, jump_to, seq_length, which_max[seq_length-1], start, end);
@@ -615,7 +524,7 @@ int alignReplicates(char* result, char *seq, unsigned int seq_length){
     free(max);
     free(which_max);
     
-    return 0;
+    return replication_number;
 }
 
 int alignReplicates_old(char *seq, unsigned int seq_length){

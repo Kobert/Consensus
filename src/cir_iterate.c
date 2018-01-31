@@ -41,7 +41,7 @@ void duplicateSequence(char *duplicate, char* seq){
 void cirseqReadsWithKey(setting arg, globalVariables *globalVar, resultsVector *rv, unsigned int hashValue, unsigned int hashTableSize)
 {
   
-    
+    print_selective("csv:\ti\tcount\tlength\n");
     
     int i;
 
@@ -101,7 +101,9 @@ void cirseqReadsWithKey(setting arg, globalVariables *globalVar, resultsVector *
   
 //     unsigned int readDiff = 2;//During the first iteration of the while loop only read the name and then the read
   unsigned int readDiff = 1;//During the first iteration of the while loop only read the name and then the read
-	// This loop goes over all short read's dna data
+
+  int cirSeq_reads_found = 0;
+  // This loop goes over all short read's dna data
 	while(getNthLine(readDiff, readsFile, &seq_name, &bytesToRead_name))
 	{
 //              printTime();
@@ -136,20 +138,28 @@ void cirseqReadsWithKey(setting arg, globalVariables *globalVar, resultsVector *
 //         mappingQuality = 255;
 	
         
-        alignReplicates(consensus, seq, strlen(seq));
+        int repeat_number = alignReplicates(consensus, seq, strlen(seq));
         char* original_consensus = strdup(consensus);
 //         If a reference is provided and we belive there to be a cirSeq read, try to align it to the reference
- if(arg.referenceFile && (strlen(consensus) * 2 <= strlen(seq)) && 0<floor( (double)strlen(consensus)/(double)basesPerWindow())   )
+ if(arg.referenceFile && (repeat_number > 1) && 0<floor( (double)strlen(consensus)/(double)basesPerWindow())   )
  {
+     
+     
      char* duplicate = (char*)calloc(2*strlen(seq)+1, sizeof(char));
      duplicateSequence(duplicate, consensus);
+     
+     
      
 //      flip around some pointers to avoid renaming all variables....
      char * temp;
      temp = seq;
      seq = duplicate;
      duplicate = temp;
-//      printf("seq bf: %s\n",seq);
+     
+     free(complement);
+     complement = strdup(seq);
+
+     //      printf("seq bf: %s\n",seq);
 	// Find the left most position where the read aligns to the reference.
 	// The first try is performed on the regular sequence with no offset.
 	whichPos = placeFragments(arg, globalVar, rv, globalVar->hashTable, globalVar->entryTable, seq, 0, &hit, &miss, &hitPerRound, &max_fragments);
@@ -310,8 +320,10 @@ temp_qual[i] = '\0';
 // printf("%s\n", temp_qual);
 
 free(temp_qual);
-if(strlen(seq) > 2*strlen(consensus)){
+if(repeat_number > 1){
     
+    print_selective("csv:\t%d\t%d\t%d\n", cirSeq_reads_found, repeat_number, strlen(consensus));
+    cirSeq_reads_found++;
 //     exit(0);
 printf("%s\n", seq_name);
 printf("%s\n", consensus);
