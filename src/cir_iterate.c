@@ -319,7 +319,7 @@ temp_qual[i] = '\0';
 // printf("+\n");
 // printf("%s\n", temp_qual);
 
-free(temp_qual);
+
 if(repeat_number > 1){
     
     print_selective("csv:\t%d\t%d\t%d\n", cirSeq_reads_found, repeat_number, strlen(consensus));
@@ -336,6 +336,7 @@ printf("%s\n", temp_qual);
 }
 
 	  readDiff = 1; // We should be at quality and want to advance to the name.
+	  free(temp_qual);
 	  free(complement);
           free(consensus);
           free(original_consensus);
