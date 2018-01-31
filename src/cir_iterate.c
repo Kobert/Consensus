@@ -41,7 +41,7 @@ void duplicateSequence(char *duplicate, char* seq){
 void cirseqReadsWithKey(setting arg, globalVariables *globalVar, resultsVector *rv, unsigned int hashValue, unsigned int hashTableSize)
 {
   
-    print_selective("csv:\ti\tcount\tlength\n");
+    print_selective("csv:\ti\tcount\tlength\tconsens\tname\n");
     
     int i;
 
@@ -322,7 +322,7 @@ temp_qual[i] = '\0';
 
 if(repeat_number > 1){
     
-    print_selective("csv:\t%d\t%d\t%d\n", cirSeq_reads_found, repeat_number, strlen(consensus));
+    print_selective("csv:\t%d\t%d\t%d\t%s\t%s\n", cirSeq_reads_found, repeat_number, strlen(consensus), consensus, seq_name);
     cirSeq_reads_found++;
 //     exit(0);
 printf("%s\n", seq_name);

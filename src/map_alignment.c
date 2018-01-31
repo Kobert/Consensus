@@ -126,7 +126,7 @@ double unadjustedScore(char * seq, int** jump_to, int dim, int start, double mat
 }
 
 
-int findNumberOfReplicates(char * seq, int** jump_to, int dim, int start){
+int findNumberOfReplicates(char * seq, int** jump_to, int dim, int start, int estimated_length){
     
     int i;
     int pos = start;
@@ -149,11 +149,19 @@ int findNumberOfReplicates(char * seq, int** jump_to, int dim, int start){
         }
     }
 
-
+    int sum = 0;
+    for(i = 0 ; i < dim ; i++ )
+    {
+        if(num_hits[i] > 1)
+        {
+         sum++;   
+        }
+        
+    }
     
     free(num_hits);
     
-    if(number <= 1)
+    if(number <= 1 || estimated_length == 0 ||  sum/(double)estimated_length < 0.5)
     {
         return 1;
     }else{
@@ -493,7 +501,7 @@ int alignReplicates(char* result, char *seq, unsigned int seq_length){
     int start = findStartReplicates(seq, jump_to, seq_length, which_max[seq_length-1]);
     int end   = findEndReplicates(seq, seq_length,  match,  miss,  jump);
     
-    int replication_number = findNumberOfReplicates(seq, jump_to, seq_length, which_max[seq_length-1]);
+    int replication_number = findNumberOfReplicates(seq, jump_to, seq_length, which_max[seq_length-1], (end-start));
     
     
      char* result_seq = (char*)calloc(seq_length+1, sizeof(char));
