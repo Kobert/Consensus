@@ -161,7 +161,7 @@ int findNumberOfReplicates(char * seq, int** jump_to, int dim, int start, int es
     
     free(num_hits);
     
-    if(number <= 1 || estimated_length == 0 ||  sum/(double)estimated_length < 0.5)
+    if(number <= 1 || estimated_length == 0 ||  sum/(double)estimated_length < 0.8)
     {
         return 1;
     }else{
@@ -501,12 +501,13 @@ int alignReplicates(char* result, char *seq, unsigned int seq_length){
     int start = findStartReplicates(seq, jump_to, seq_length, which_max[seq_length-1]);
     int end   = findEndReplicates(seq, seq_length,  match,  miss,  jump);
     
-    int replication_number = findNumberOfReplicates(seq, jump_to, seq_length, which_max[seq_length-1], (end-start));
+
     
     
      char* result_seq = (char*)calloc(seq_length+1, sizeof(char));
     findConsensusReplicates(result_seq, seq, jump_to, seq_length, which_max[seq_length-1], start, end);
     
+      
 //     print_selective("Start: %d End: %d\n", start, end);
     
     if(start<end)
@@ -518,6 +519,7 @@ int alignReplicates(char* result, char *seq, unsigned int seq_length){
         result[i] = seq[i];
     }
     
+    int replication_number = findNumberOfReplicates(seq, jump_to, seq_length, which_max[seq_length-1], strlen(result));
     
 //     TODO return this value
     free(result_seq);
