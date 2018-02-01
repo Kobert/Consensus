@@ -128,6 +128,8 @@ double unadjustedScore(char * seq, int** jump_to, int dim, int start, double mat
 
 int findNumberOfReplicates(char * seq, int** jump_to, int dim, int start, int estimated_length){
     
+    assert(estimated_length > 0);
+    
     int i;
     int pos = start;
     int number = 0;
@@ -149,19 +151,30 @@ int findNumberOfReplicates(char * seq, int** jump_to, int dim, int start, int es
         }
     }
 
-    int sum = 0;
-    for(i = 0 ; i < dim ; i++ )
+    int sum;
+    
+    while(number > 1)
     {
-        if(num_hits[i] > 1)
+        sum = 0;
+        for(i = 0 ; i < dim ; i++ )
         {
-         sum++;   
+            if(num_hits[i] > number)
+            {
+            sum++;   
+            }
+        
         }
         
+        if(sum/(double)estimated_length >= 0.8)
+            break;
+        
+        number--;
     }
     
     free(num_hits);
     
-    if(number <= 1 || estimated_length == 0 ||  sum/(double)estimated_length < 0.8)
+//     if(number <= 1 || estimated_length == 0 ||  sum/(double)estimated_length < 0.8)
+    if(number <= 1)
     {
         return 1;
     }else{
@@ -461,7 +474,7 @@ int findEndReplicates(char *seq, unsigned int seq_length, double match, double m
 }
 
 // Finds the consensus of cirseq data reads. Returns the number of replicates found.
-int alignReplicates(char* result, char *seq, unsigned int seq_length){
+int alignReplicates(setting arg, char* result, char *seq, unsigned int seq_length){
     
     int i;
     

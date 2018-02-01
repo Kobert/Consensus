@@ -138,7 +138,7 @@ void cirseqReadsWithKey(setting arg, globalVariables *globalVar, resultsVector *
 //         mappingQuality = 255;
 	
         
-        int repeat_number = alignReplicates(consensus, seq, strlen(seq));
+        int repeat_number = alignReplicates(arg, consensus, seq, strlen(seq));
         char* original_consensus = strdup(consensus);
 //         If a reference is provided and we belive there to be a cirSeq read, try to align it to the reference
  if(arg.referenceFile && (repeat_number > 1) && 0<floor( (double)strlen(consensus)/(double)basesPerWindow())   )
@@ -322,7 +322,15 @@ temp_qual[i] = '\0';
 
 if(repeat_number > 1){
     
-    print_selective("csv:\t%d\t%d\t%d\t%s\t%s\n", cirSeq_reads_found, repeat_number, strlen(consensus), consensus, seq_name);
+    print_selective("csv:\t%d\t%d\t%d\t%s\t%s", cirSeq_reads_found, repeat_number, strlen(consensus), consensus, seq_name);
+    if(repeat_number*(strlen(consensus)*0.8)+strlen(consensus)*0.2 > strlen(seq))
+    {
+     print_selective("\tBAD_Length");   
+    }else{
+    print_selective("\tGOOD_Length");   
+    }
+    print_selective("\n");   
+    
     cirSeq_reads_found++;
 //     exit(0);
 printf("%s\n", seq_name);
