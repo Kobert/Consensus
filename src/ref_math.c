@@ -1,4 +1,5 @@
 #include <math.h>
+#include <assert.h>
 
 #include "referenceAssembly.h" 
 #include "ref_math.h" 
@@ -39,12 +40,37 @@ double Q2P(unsigned int q)
   
 }
 
+// returns the actual (error) probability from a Phread score in char/letter form.
+double cQ2P(char c)
+{
+    
+    if((int)c < 33)
+    {
+        fprintf(stderr, "Character not a valid Phread-score: '%c'\n",c);
+        assert((int)c >= 33);
+    }
+    
+ return pow(10.0, (double)((int)c-33)/(-10));
+
+}
+
 unsigned int P2Q(double p)
 {
   
  return (int)(-10.0*log((double)p)/log(10)+0.5);
   
 }
+
+// char combinePhreadScores(char* e_new, char DNA_1, char DNA_2, char e_1, char e_2)
+// {
+//     int d;
+//     if(DNA_1 == DNA_2)
+//     {
+//         
+//     }
+//     
+// }
+
 
 // Returns the probability of randomly observing k matching windows in a sequence of length length, given a reference sequence of length refLength
 double probRandom(setting s, unsigned int k, unsigned int refLength, unsigned int length)
@@ -106,7 +132,8 @@ unsigned int mapping_quality(setting s, unsigned int k, unsigned int refLength, 
 {
     
     double p = probRandom(s, k, refLength, length);
-    double threshold = 0.000000001;
+    double threshold;
+//     = 0.000000001;
     threshold = Q2P(93);
     
     if(p <= threshold)

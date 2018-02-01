@@ -16,7 +16,7 @@ typedef struct cstack_s
   struct cstack_s * next;
 } cstack_t;
 
-int alignReplicates(char* result, char *seq, unsigned int seq_length);
+int alignReplicates(setting arg, char* result, char *seq, unsigned int seq_length);
 
 int alignSingleDeletion(unsigned int length, char* ref1, char* ref2, char* read);
 
