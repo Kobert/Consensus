@@ -77,7 +77,7 @@ cirseqReads(arg, &globalVar, &rv);
 //   hashMapReads(arg, &globalVar, &rv);
 
 
-  print_selective("\nGood hits: %d, multi hits %d bad hits %d (bad + multi %.11f)\n", good_hit, multi_hit, bad_hit, (bad_hit+multi_hit)/(double)(good_hit+bad_hit+multi_hit));
+//   print_selective("\nGood hits: %d, multi hits %d bad hits %d (bad + multi %.11f)\n", good_hit, multi_hit, bad_hit, (bad_hit+multi_hit)/(double)(good_hit+bad_hit+multi_hit));
   
   postProcessResults(arg, &rv);
 
@@ -135,7 +135,18 @@ print_selective("\n\t Avg trimmed ratio:   %.4f (Average per read)\n",globalVar.
 print_selective("\t Total trimmed ratio: %.4f (Fraction of sites)\n\n",(double)globalVar.trimmed/(globalVar.trimmed + globalVar.kept));
 } 
   
+  
+  
+  print_selective("\n\t Number of cirseq reads identified: %u\n", rv.cir_num );  
+  print_selective("\n\t Average length of cirseq consensus sequences: %.2f\n", (rv.cir_total_length/(double)rv.cir_num) );
+  print_selective("\t Average number of replicates per cirseq read: %.2f\n", (rv.cir_foldings/(double)rv.cir_num));
 
+  if(arg.referenceFile){
+   print_selective("\n\t Resulting average coverage on reference: %.2f\n", rv.on_ref_total_length/(double)globalVar.referenceSequenceLength);   
+  }
+  
+  print_selective("\n");
+  
   printTime();
   print_selective(" Freeing data-structures...\n");
   cleanForExit(&arg, &globalVar,  &rv);

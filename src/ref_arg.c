@@ -866,6 +866,13 @@ void initResults(resultsVector *rv, unsigned int length)
     
    rv->hit  = 0;
    rv->miss = 0;
+   
+   
+   rv->cir_total_length = 0;
+   rv->cir_foldings     = 0;
+   rv->cir_num          = 0;
+   rv->on_ref_num       = 0;
+   rv->on_ref_total_length = 0;
 }
 
 

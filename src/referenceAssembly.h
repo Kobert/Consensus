@@ -271,6 +271,14 @@ typedef struct
    unsigned int hit;
    unsigned int miss;
    
+   unsigned int cir_total_length;
+   unsigned int cir_foldings;
+   unsigned int cir_num;
+   unsigned int on_ref_num;
+   unsigned int on_ref_total_length;
+   
+   
+   
 }resultsVector;
 
 //int populateHashTableWithKey(setting * arg, unsigned int hashValue, unsigned int hashTableSize);

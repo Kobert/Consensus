@@ -41,7 +41,7 @@ void duplicateSequence(char *duplicate, char* seq){
 void cirseqReadsWithKey(setting arg, globalVariables *globalVar, resultsVector *rv, unsigned int hashValue, unsigned int hashTableSize)
 {
   
-    print_selective("csv:\ti\tcount\tlength\tconsens\tname\n");
+//     print_selective("csv:\ti\tcount\tlength\tconsens\tname\n");
     
     int i;
 
@@ -102,7 +102,7 @@ void cirseqReadsWithKey(setting arg, globalVariables *globalVar, resultsVector *
 //     unsigned int readDiff = 2;//During the first iteration of the while loop only read the name and then the read
   unsigned int readDiff = 1;//During the first iteration of the while loop only read the name and then the read
 
-  int cirSeq_reads_found = 0;
+//   int cirSeq_reads_found = 0;
   // This loop goes over all short read's dna data
 	while(getNthLine(readDiff, readsFile, &seq_name, &bytesToRead_name))
 	{
@@ -121,7 +121,7 @@ void cirseqReadsWithKey(setting arg, globalVariables *globalVar, resultsVector *
 	  char * result;
 
           char * consensus = strdup(seq);
-          
+          double * consensus_phred = (double*)malloc(strlen(seq)*sizeof(double));
 	  unsigned int shift = 0;
 
 	  
@@ -138,8 +138,14 @@ void cirseqReadsWithKey(setting arg, globalVariables *globalVar, resultsVector *
 //         mappingQuality = 255;
 	
         
-        int repeat_number = alignReplicates(arg, consensus, seq, strlen(seq));
+        int repeat_number = alignReplicates(arg, consensus, consensus_phred, seq, seqQ, strlen(seq));
         char* original_consensus = strdup(consensus);
+        
+        if(repeat_number > 1){
+            rv->cir_num++;
+            rv->cir_total_length += strlen(consensus);
+            rv->cir_foldings += repeat_number;
+        }
 //         If a reference is provided and we belive there to be a cirSeq read, try to align it to the reference
  if(arg.referenceFile && (repeat_number > 1) && 0<floor( (double)strlen(consensus)/(double)basesPerWindow())   )
  {
@@ -239,7 +245,10 @@ void cirseqReadsWithKey(setting arg, globalVariables *globalVar, resultsVector *
 //             mappingQuality = mapping_quality(arg, max_fragments, globalVar->referenceSequenceLength, strlen(seq));
 
 	    numMatches++;
-	    
+	    rv->on_ref_num++; //For Cirseq output
+
+            
+            
 	    if(matchForward)
 	    {
 	      numForwardMatches++;
@@ -288,6 +297,10 @@ void cirseqReadsWithKey(setting arg, globalVariables *globalVar, resultsVector *
 
 		  
 		  }
+		   //For Cirseq output
+	    rv->on_ref_total_length += strlen(consensus);
+		  
+		  
 	  }else{ 
 
               
@@ -322,16 +335,16 @@ temp_qual[i] = '\0';
 
 if(repeat_number > 1){
     
-    print_selective("csv:\t%d\t%d\t%d\t%s\t%s", cirSeq_reads_found, repeat_number, strlen(consensus), consensus, seq_name);
+/*    print_selective("csv:\t%d\t%d\t%d\t%s\t%s", cirSeq_reads_found, repeat_number, strlen(consensus), consensus, seq_name);
     if(repeat_number*(strlen(consensus)*0.8)+strlen(consensus)*0.2 > strlen(seq))
     {
      print_selective("\tBAD_Length");   
     }else{
     print_selective("\tGOOD_Length");   
     }
-    print_selective("\n");   
+    print_selective("\n");  */ 
     
-    cirSeq_reads_found++;
+//     cirSeq_reads_found++;
 //     exit(0);
 printf("%s\n", seq_name);
 printf("%s\n", consensus);
@@ -347,18 +360,19 @@ printf("%s\n", temp_qual);
 	  free(temp_qual);
 	  free(complement);
           free(consensus);
+          free(consensus_phred);
           free(original_consensus);
 	}
   
 
        
-  print_selective("\n\tNumber of reads: %u, number of matching reads: %u (%.2f%%)\n", numReads, numMatches, 100.0*(double)numMatches/numReads);
+  print_selective("\n\tNumber of reads: %u, number of reads mapped to the reference: %u (%.2f%%)\n", numReads, numMatches, 100.0*(double)numMatches/numReads);
   print_selective("\t(Forward %.2f%%, reverse %.2f%% (Shifted: %.2f%%))\n", 100.0*(double)numForwardMatches/numReads,
 								 100.0*(double)numReverseMatches/numReads, 
 								 100.0*(double)numShiftedMatches/numReads);
   
   
-  print_selective("Indels: %u\n", rv->indels);
+//   print_selective("Indels: %u\n", rv->indels);
   //Free allocated data structures
 //   fclose(samFile);
   

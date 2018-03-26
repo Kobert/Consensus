@@ -373,7 +373,7 @@ char combine(char c, char b){
 }
 
 
-void findConsensusReplicates(char* result_seq, char * seq, int** jump_to, int dim, int start, int start_limit, int end_limit)
+void findConsensusReplicates(char* result_seq, double* result_phred, char * seq, char* seqQ, int** jump_to, int dim, int start, int start_limit, int end_limit)
 {
             int i;
     int pos = start;
@@ -385,9 +385,14 @@ void findConsensusReplicates(char* result_seq, char * seq, int** jump_to, int di
         {
 //          if we already encountered a hit here
             if(result_seq[pos]){
+//                 double temp_phred;
             result_seq[pos] = combine(result_seq[pos], seq[i]);
+//             result_seq[pos] = combine_exact(&temp_phred, result_seq[pos], result_phred[pos], seq[i], cQ2P(seqQ[i]));
+//             result_phred[pos] = temp_phred;
+            
             }else{//If this is the first hit for the position
                 result_seq[pos] = seq[i];
+                result_phred[pos] = cQ2P(seqQ[i]);
             }
         }
         
@@ -474,7 +479,7 @@ int findEndReplicates(char *seq, unsigned int seq_length, double match, double m
 }
 
 // Finds the consensus of cirseq data reads. Returns the number of replicates found.
-int alignReplicates(setting arg, char* result, char *seq, unsigned int seq_length){
+int alignReplicates(setting arg, char* result, double * result_phred, char *seq, char* seqQ, unsigned int seq_length){
     
     int i;
     
@@ -518,7 +523,7 @@ int alignReplicates(setting arg, char* result, char *seq, unsigned int seq_lengt
     
     
      char* result_seq = (char*)calloc(seq_length+1, sizeof(char));
-    findConsensusReplicates(result_seq, seq, jump_to, seq_length, which_max[seq_length-1], start, end);
+    findConsensusReplicates(result_seq, result_phred, seq, seqQ, jump_to, seq_length, which_max[seq_length-1], start, end);
     
       
 //     print_selective("Start: %d End: %d\n", start, end);

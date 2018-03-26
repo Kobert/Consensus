@@ -20,14 +20,14 @@
   printf("This is the CirSeq Consensus finder v. 0.0.1\n\n"); 
   printf("Function arguments are:\n"); 
   printf("\n"); 
-  printf(" -r <string> (optional) for specifying a file containing the reference sequence (fasta format only)\n");    
+  printf(" -r <string>            for specifying a file containing the reference sequence (fasta format only)\n");    
   printf(" -s <string>            for specifying a file with shortreads (fastq format only)\n");    
   printf("\n");    
 //   printf("Optional arguments:\n\n"); 
 //   printf(" -o <Path/string>  specify a prefix for the output names (can include a path).\n");  
 //   printf("                   If no Prefix is provided, only generic temporary files will be written.\n");
 //   printf("\n");    
-  printf(" -h                Print this help messgae\n");    
+  printf(" -h                Print this help messgage and exit\n");    
   printf("\n\n");
   }
  
