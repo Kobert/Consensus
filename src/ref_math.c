@@ -61,6 +61,15 @@ unsigned int P2Q(double p)
   
 }
 
+char Q2C(unsigned int q){
+ 
+    if(q > 89)
+        return (char)(89+33);
+    
+    return (char)(q+33);
+    
+}
+
 // char combinePhreadScores(char* e_new, char DNA_1, char DNA_2, char e_1, char e_2)
 // {
 //     int d;

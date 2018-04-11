@@ -121,7 +121,7 @@ void cirseqReadsWithKey(setting arg, globalVariables *globalVar, resultsVector *
 	  char * result;
 
           char * consensus = strdup(seq);
-          double * consensus_phred = (double*)malloc(strlen(seq)*sizeof(double));
+          char * consensus_phred = (char*)malloc( (strlen(seq)+1)*sizeof(char) );
 	  unsigned int shift = 0;
 
 	  
@@ -138,6 +138,21 @@ void cirseqReadsWithKey(setting arg, globalVariables *globalVar, resultsVector *
 //         mappingQuality = 255;
 	
         
+        
+//         First test whether the read maps to the reference
+//          if(arg.referenceFile  && 0<floor( (double)strlen(consensus)/(double)basesPerWindow()) ){
+//              
+//              	whichPos = placeFragments(arg, globalVar, rv, globalVar->hashTable, globalVar->entryTable, seq, 0, &hit, &miss, &hitPerRound, &max_fragments);
+//                 
+//                 
+//          }
+        
+        
+        
+        
+        
+        
+        
         int repeat_number = alignReplicates(arg, consensus, consensus_phred, seq, seqQ, strlen(seq));
         char* original_consensus = strdup(consensus);
         
@@ -146,21 +161,25 @@ void cirseqReadsWithKey(setting arg, globalVariables *globalVar, resultsVector *
             rv->cir_total_length += strlen(consensus);
             rv->cir_foldings += repeat_number;
         }
+        
+        
 //         If a reference is provided and we belive there to be a cirSeq read, try to align it to the reference
+if(0)//Unused code. Needs new implementation TODO
  if(arg.referenceFile && (repeat_number > 1) && 0<floor( (double)strlen(consensus)/(double)basesPerWindow())   )
  {
      
      
      char* duplicate = (char*)calloc(2*strlen(seq)+1, sizeof(char));
      duplicateSequence(duplicate, consensus);
-     
-     
+          
      
 //      flip around some pointers to avoid renaming all variables....
      char * temp;
      temp = seq;
      seq = duplicate;
      duplicate = temp;
+     
+     
      
      free(complement);
      complement = strdup(seq);
@@ -319,13 +338,13 @@ void cirseqReadsWithKey(setting arg, globalVariables *globalVar, resultsVector *
 }
 
 // TODO do actual quality scores
-char* temp_qual = strdup(seqQ);
+char* temp_qual = strdup(consensus_phred);
 
-for(i=0; i < strlen(consensus); i++)
-{
- temp_qual[i] = 'I';   
-}
-temp_qual[i] = '\0';
+// for(i=0; i < strlen(consensus); i++)
+// {
+//  temp_qual[i] = 'I';   
+// }
+// temp_qual[i] = '\0';
 
 // printf("%s\n", seq_name);
 // printf("%s\n", consensus);
@@ -350,6 +369,8 @@ printf("%s\n", seq_name);
 printf("%s\n", consensus);
 printf("+\n");
 printf("%s\n", temp_qual);
+
+assert(strlen(consensus) == strlen(temp_qual));
 
 // printf("\n%s\n", seq);
 // printf("%s\n", original_consensus);

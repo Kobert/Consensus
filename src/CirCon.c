@@ -24,8 +24,12 @@ int main(int argc, char **argv)
 {
     
     
-    
+//     double temp_error;
+// char c = combine_exact(&temp_error, 'A', 0.5, 'A', 0.001);
 
+// print_selective("c: %c, phred: %d (e: %f)\n", c, P2Q(temp_error), temp_error);
+
+// exit(0);
 //     Bad Case Zika
 //     char string[] = "GGGGGTGGGGTGTTCAGGGCAGAACAGCAAGGCGAAAAGAAGCTTTATGAGAAACTGTTTTGAGTTCTGTTAATAGATCGGAAGAGCACACGTCTGAACTCCAGTCACCGATGTATCTCGTATGCCGTCTTCTGCTTGAAAAAAAAAAAACAAAACCTTCGTCTTCTCGCATACCTGAGCTTTTATATGTACGTGGGTGGGNNNN\0";
 

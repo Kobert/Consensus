@@ -13,14 +13,19 @@
 typedef struct cstack_s
 {
   char c;
+  char q; //optional quality as phred
   struct cstack_s * next;
 } cstack_t;
 
-int alignReplicates(setting arg, char* result, double * result_phred, char *seq, char* seqQ, unsigned int seq_length);
+char combine_exact(double * result_p_error, char c, double p_error_c, char s, double p_error_s);
+
+int alignReplicates(setting arg, char* result, char * result_phred, char *seq, char* seqQ, unsigned int seq_length);
 
 int alignSingleDeletion(unsigned int length, char* ref1, char* ref2, char* read);
 
 int alignSingleInsertion(unsigned int length, char* ref1, char* ref2, char* read, int offset);
+
+int alignCirceq_call(setting s, globalVariables* g, int* positive_placements, int num_placements, char * seq, char* seqQ);
 
 int alignAffine(unsigned int length_a, const char * a, unsigned int length_b, const char * b);
 #endif

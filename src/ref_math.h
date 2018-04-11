@@ -12,6 +12,8 @@ double cQ2P(char c);
 
 unsigned int P2Q(double p);
 
+char Q2C(unsigned int q);
+
 double probRandom(setting s, unsigned int k, unsigned int refLength, unsigned int length);
 
 unsigned int mapping_quality(setting s, unsigned int k, unsigned int refLength, unsigned int length);

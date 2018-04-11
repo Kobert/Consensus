@@ -25,6 +25,9 @@
 //     
 // }
 
+int alignAffine_no_tail_open_costs(int original_length, unsigned int length_a, const char * a, const char* q, unsigned int length_b, const char * b, int mismatch, int open, int ext);
+
+
 void printQuadraticMatrix(double** matrix, int dim){
     
     int i,j;
@@ -372,12 +375,40 @@ char combine(char c, char b){
     
 }
 
+char combine_exact(double * result_p_error, char c, double p_error_c, char s, double p_error_s){
+    
+    char result_c;
+    
+    if(c == s){
+     result_c = c;  
+     *result_p_error =1.0 -( (1-p_error_c)*(1-p_error_s)/((1-p_error_c)*(1-p_error_s) + 3*1/9.0*p_error_c*p_error_s));
+    }else{
+        double temp_c = (1-p_error_c)    *(1/3.0*p_error_s)/((1-p_error_c)*(1/3.0*p_error_s) + (1/3.0*p_error_c)*(1-p_error_s) + 2*1/9.0*p_error_c*p_error_s);
+        double temp_s = (1/3.0*p_error_c)*(1-p_error_s)    /((1-p_error_c)*(1/3.0*p_error_s) + (1/3.0*p_error_c)*(1-p_error_s) + 2*1/9.0*p_error_c*p_error_s);
+    
+        result_c = c;
+        *result_p_error =1.0 - temp_c;
+        
+        if(temp_c < temp_s){
+            result_c = s;
+            *result_p_error =1.0 - temp_s;
+        }
+        
 
-void findConsensusReplicates(char* result_seq, double* result_phred, char * seq, char* seqQ, int** jump_to, int dim, int start, int start_limit, int end_limit)
+    }
+    
+    
+    assert(*result_p_error >= 0.0);
+    
+    return result_c;
+}
+            
+            
+void findConsensusReplicates(char* result_seq, char* result_phred, char * seq, char* seqQ, int** jump_to, int dim, int start, int start_limit, int end_limit)
 {
             int i;
     int pos = start;
-    
+    double temp_phred;
     
     for(i = dim-1 ; i >= start_limit ; i--){
         
@@ -386,13 +417,14 @@ void findConsensusReplicates(char* result_seq, double* result_phred, char * seq,
 //          if we already encountered a hit here
             if(result_seq[pos]){
 //                 double temp_phred;
-            result_seq[pos] = combine(result_seq[pos], seq[i]);
-//             result_seq[pos] = combine_exact(&temp_phred, result_seq[pos], result_phred[pos], seq[i], cQ2P(seqQ[i]));
-//             result_phred[pos] = temp_phred;
+//             result_seq[pos] = combine(result_seq[pos], seq[i]);
+            result_seq[pos] = combine_exact(&temp_phred, result_seq[pos], cQ2P(result_phred[pos]), seq[i], cQ2P(seqQ[i]));
+            result_phred[pos] = Q2C( P2Q(temp_phred) );
             
             }else{//If this is the first hit for the position
                 result_seq[pos] = seq[i];
-                result_phred[pos] = cQ2P(seqQ[i]);
+//                 result_phred[pos] = cQ2P(seqQ[i]);
+                result_phred[pos] = seqQ[i];
             }
         }
         
@@ -406,7 +438,7 @@ void findConsensusReplicates(char* result_seq, double* result_phred, char * seq,
         
         
     char * temp = strdup(seq);
-                
+    char * temp_phred_score = strdup(seqQ);            
 
     int count = 0;
     
@@ -415,20 +447,28 @@ void findConsensusReplicates(char* result_seq, double* result_phred, char * seq,
          if(result_seq[i])
          {
           temp[count] = result_seq[i];
+          temp_phred_score[count] = result_phred[i];
           count++;
          }
         }
         temp[count] = '\0';
+        temp_phred_score[count] = '\0';
         
         
         
-        for(i = 0 ; i < dim; i++)
+        for(i = 0 ; i < dim+1; i++)
         {
             result_seq[i] = temp[i];
+            result_phred[i] = temp_phred_score[i];
         }
         
         
+        if(strlen(result_seq) != strlen(result_phred)){
+        print_selective("dim: %d, count: %d\n", dim, count);
+            assert( strlen(result_seq) == strlen(result_phred) );
+        }
         free(temp);
+        free(temp_phred_score);
         
 //                 print_selective("\n%s\n", result_seq);
 }
@@ -479,7 +519,7 @@ int findEndReplicates(char *seq, unsigned int seq_length, double match, double m
 }
 
 // Finds the consensus of cirseq data reads. Returns the number of replicates found.
-int alignReplicates(setting arg, char* result, double * result_phred, char *seq, char* seqQ, unsigned int seq_length){
+int alignReplicates(setting arg, char* result, char * result_phred, char *seq, char* seqQ, unsigned int seq_length){
     
     int i;
     
@@ -944,8 +984,62 @@ int alignSingleInsertion(unsigned int length, char* ref1, char* ref2, char* read
    return 0; 
 }
 
+int alignCirseq(int original_length, unsigned int length_a, const char * a, const char *q_a, unsigned int length_b, const char * b)
+{
+    
+//  return alignAffine_costs(length_a,  a, length_b, b, (-1)*(-2), (-1)*(-10), (-1)*(-1));
+ return alignAffine_no_tail_open_costs(original_length, length_a,  a, q_a, length_b, b, (-1)*(-2), (-1)*(-10), (-1)*(-1));
+   
+}
 
 
+int alignCirceq_call(setting s, globalVariables* g, int* positive_placements, int num_placements, char * seq, char* seqQ){
+    
+    int i;
+    int min = -1;
+    int max = -1;
+    
+    assert(num_placements > 1);
+    printf("Num_placements: %d\n", num_placements);
+    unsigned int length_a;
+    char * a;    
+    unsigned int length_b;
+    char * b;
+    
+    for(i=0; i<num_placements; i++){
+        if(positive_placements[i] > max){
+        max = positive_placements[i];
+        }
+        if(positive_placements[i] < min || min < 0 ){
+        min = positive_placements[i];
+        }
+    }
+    unsigned int seq_length = strlen(seq);
+    
+    length_a = ((max - min) + seq_length);
+    
+//     The additional space is for delimiting Ns
+    length_b = num_placements*length_a + (num_placements-1)*8;
+   
+    a = (char *)calloc(length_a + 1, sizeof(char));
+    b = (char *)calloc(length_b + 1, sizeof(char));
+   
+    for(i=0; i<length_a;i++){
+     a[i] = g->referenceSequence[min + i];
+     b[i] = g->referenceSequence[min + i];
+    }
+    
+     for(i=0; i<num_placements-1 ;i++){
+         strcat(b, "NNNNNNNN");
+         strcat(b, a);
+     }
+    
+   int result = alignCirseq(length_a, seq_length, seq, seqQ, length_b, b);
+    
+   free(a);
+   free(b);
+ return result;   
+}
 
 char* alignAnyIndel(setting s, globalVariables* g, char* seq, unsigned int num);
 
@@ -1051,9 +1145,57 @@ void cstack_print(const char * prefix, cstack_t ** stack)
   
 }
 
-
-void backtrackAffine(int ** d, int ** e, const char * a, const char * b, int i, int j, cstack_t ** astack, cstack_t ** bstack)
+void cstack_result(char * result, int length, cstack_t ** stack_a, cstack_t ** stack_b)
 {
+  cstack_t * top_a = *stack_a;
+  cstack_t * top_b = *stack_b;
+
+  int i = 0;
+  int j = 0;
+  
+  
+  
+  while (top_a && top_b )
+  {
+  if(top_a->c != '-'){
+   i++;   
+  }
+  if(top_b->c != '-'){
+   j++;   
+   print_selective("%c", top_a->c);
+  }
+  
+  if(j % length == 0){
+      print_selective("\n");
+  
+      j=0;
+      
+      for(int k = 0; k<8; k++){
+          if(top_a->next && top_b->next)
+          {
+          top_a = top_a->next; 
+         top_b = top_b->next;
+          }
+      }
+      
+}
+    top_a = top_a->next; 
+    top_b = top_b->next;
+  }
+  
+      print_selective("i %d, j %d\n", i, j);
+    
+}
+
+
+//Backtrack a given matrix to find the actual alignment.
+// if length > 0, the data is assumed to be cirseq data
+void backtrackAffine(int length, int ** d, int ** e, const char * a, const char * b, int i, int j, cstack_t ** astack, cstack_t ** bstack, int * done)
+{
+    if(*done){
+        return;
+    }
+    
   int k,m;
 
   if (i > 0 && j > 0)
@@ -1081,7 +1223,7 @@ void backtrackAffine(int ** d, int ** e, const char * a, const char * b, int i, 
          cstack_push(bstack, '-');
          --k;
 //       }
-       backtrackAffine(d,e,a,b,i,k,astack,bstack);
+       backtrackAffine(length, d,e,a,b,i,k,astack,bstack, done);
        
        /* bring the stack to its original state */
        for (m = 0; m < j-k; ++m)
@@ -1113,7 +1255,7 @@ void backtrackAffine(int ** d, int ** e, const char * a, const char * b, int i, 
          cstack_push(bstack, b[k-1]);
          --k;
  //      }
-       backtrackAffine(d,e,a,b,k,j,astack,bstack);
+       backtrackAffine(length, d,e,a,b,k,j,astack,bstack, done);
 
        /* bring the stack to its original state */
        for (m = 0; m < i-k; ++m)
@@ -1130,7 +1272,7 @@ void backtrackAffine(int ** d, int ** e, const char * a, const char * b, int i, 
       /* single indel gap */
       cstack_push(astack, a[j-1]);
       cstack_push(bstack, '-');
-      backtrackAffine(d,e,a,b,i,j-1,astack,bstack);
+      backtrackAffine(length, d,e,a,b,i,j-1,astack,bstack, done);
       cstack_pop(astack);
       cstack_pop(bstack);
     }
@@ -1142,7 +1284,7 @@ void backtrackAffine(int ** d, int ** e, const char * a, const char * b, int i, 
       /* single indel gap */
       cstack_push(astack, '-');
       cstack_push(bstack, b[i-1]);
-      backtrackAffine(d,e,a,b,i-1,j,astack,bstack);
+      backtrackAffine(length, d,e,a,b,i-1,j,astack,bstack, done);
       cstack_pop(astack);
       cstack_pop(bstack);
     }
@@ -1154,7 +1296,7 @@ void backtrackAffine(int ** d, int ** e, const char * a, const char * b, int i, 
       /* match/mismatch */
       cstack_push(astack, a[j-1]);
       cstack_push(bstack, b[i-1]);
-      backtrackAffine(d,e,a,b,i-1,j-1,astack,bstack);
+      backtrackAffine(length, d,e,a,b,i-1,j-1,astack,bstack, done);
       cstack_pop(astack);
       cstack_pop(bstack);
     }
@@ -1187,6 +1329,11 @@ void backtrackAffine(int ** d, int ** e, const char * a, const char * b, int i, 
     }
 
     /* print sequences */
+    if(length > 0){
+    cstack_result(NULL, length, astack, bstack);
+    //For cirseq we are only interested in a single alignment. So stop by setting done to 1
+   *done = 1;
+    }
     cstack_print("A", astack);
     cstack_print("B", bstack);
     printf("\n");
@@ -1197,6 +1344,7 @@ void backtrackAffine(int ** d, int ** e, const char * a, const char * b, int i, 
       cstack_pop(astack);
       cstack_pop(bstack);
     }
+    
   }
 }
 
@@ -1277,7 +1425,8 @@ int alignAffine(unsigned int length_a, const char * a, unsigned int length_b, co
   cstack_t * bstack = NULL;
 
   /* recursively backtrack and print all optimal alignments */
-  backtrackAffine(d,e,a,b,blen,alen,&astack,&bstack);
+  int done = 0;
+  backtrackAffine(-1, d,e,a,b,blen,alen,&astack,&bstack, &done);
 
   printf("D:\n");
   print_matrix(d,blen,alen);
@@ -1292,6 +1441,110 @@ int alignAffine(unsigned int length_a, const char * a, unsigned int length_b, co
   printf("E:\n");
   print_dir(e,blen,alen);
   printf("\n\n");
+
+  /* deallocate memory */
+  for (i = 0; i <= blen; ++i)
+  {
+    free(d[i]);
+    free(p[i]);
+    free(q[i]);
+    free(e[i]);
+  }
+  free(d); free(p); free(q); free(e);
+
+  return 0;
+}
+
+
+// The difference to the previous function is simply that the first and last gap are not penelized
+// if original length != 0, the data is assumed to be Cirseq data
+int alignAffine_no_tail_open_costs(int original_length, unsigned int length_a, const char * a, const char* q_a, unsigned int length_b, const char * b, int mismatch, int open, int ext)
+{
+  int i,j;
+  
+  
+  int alen,blen;
+  int match_score;
+  int ** d;
+  int ** p;
+  int ** q;
+  int ** e;
+  
+  alen = length_a;
+  
+ blen = length_b;
+
+  /* allocate three matrices for the DP algorithm and another matrix
+     e to hold the cell pointers */
+  d = (int **)malloc((blen+1)*sizeof(int *));
+  p = (int **)malloc((blen+1)*sizeof(int *));
+  q = (int **)malloc((blen+1)*sizeof(int *));
+  e = (int **)malloc((blen+1)*sizeof(int *));
+
+  for (i = 0; i <= blen; ++i)
+  {
+    d[i] = (int *)calloc(alen+1, sizeof(int));
+    p[i] = (int *)calloc(alen+1, sizeof(int));
+    q[i] = (int *)calloc(alen+1, sizeof(int));
+    e[i] = (int *)calloc(alen+1, sizeof(int));
+  }
+  
+  /* initialize first row and column of D */
+  d[0][0] = 0;
+  for (i = 1; i <= alen; ++i)
+    d[0][i] = i*ext;
+  for (i = 1; i <= blen; ++i)
+    d[i][0] = i*ext;
+
+  /* initialize first row of P and first column of Q */
+  for (i = 1; i <= alen; ++i)
+    p[0][i] = i*ext;
+  for (i = 1; i <= blen; ++i)
+    q[i][0] = i*ext;
+
+  /* fill dynamic programming matrix */
+  for (i = 1; i <= blen; ++i)
+  {
+    for (j = 1; j <= alen; ++j)
+    {
+      p[i][j] = MIN(d[i-1][j] + open + ext, p[i-1][j] + ext);
+      q[i][j] = MIN(d[i][j-1] + open + ext, q[i][j-1] + ext);
+
+      match_score = (a[j-1] == b[i-1]) ? 0 : mismatch;
+      d[i][j] = MIN(d[i-1][j-1] + match_score, MIN(p[i][j],q[i][j]));
+
+      if (d[i][j] == d[i-1][j-1] + match_score) e[i][j] = e[i][j] | DIAG;
+      if (d[i][j] == d[i-1][j] + open + ext) e[i][j] = e[i][j] | UPOPEN;
+      if (d[i][j] == d[i][j-1] + open + ext) e[i][j] = e[i][j] | LEFTOPEN;
+      if (d[i][j] == p[i-1][j] + ext && i > 1) e[i][j] = e[i][j] | UP;
+      if (d[i][j] == q[i][j-1] + ext && j > 1) e[i][j] = e[i][j] | LEFT;
+
+      if (p[i][j] == p[i-1][j]+ext && i > 1) e[i][j] = e[i][j] | UPEXT;
+      if (q[i][j] == q[i][j-1]+ext && j > 1) e[i][j] = e[i][j] | LEFTEXT;
+    }
+  }
+
+  /* use two stacks for storing the aligned sequences when backtracking */
+  cstack_t * astack = NULL;
+  cstack_t * bstack = NULL;
+
+  /* recursively backtrack and print all optimal alignments */
+  int done = 0;
+  backtrackAffine(original_length, d,e,a,b,blen,alen,&astack,&bstack, &done);
+
+//   printf("D:\n");
+//   print_matrix(d,blen,alen);
+//   printf("\n\n");
+//   printf("P:\n");
+//   print_matrix(p,blen,alen);
+//   printf("\n\n");
+//   printf("Q:\n");
+//   print_matrix(q,blen,alen);
+//   printf("\n\n");
+// 
+//   printf("E:\n");
+//   print_dir(e,blen,alen);
+//   printf("\n\n");
 
   /* deallocate memory */
   for (i = 0; i <= blen; ++i)
