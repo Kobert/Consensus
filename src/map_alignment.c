@@ -403,12 +403,126 @@ char combine_exact(double * result_p_error, char c, double p_error_c, char s, do
     return result_c;
 }
             
-            
-void findConsensusReplicates(char* result_seq, char* result_phred, char * seq, char* seqQ, int** jump_to, int dim, int start, int start_limit, int end_limit)
+ void findConsensusReplicates(resultsVector *rv, char* result_seq, char* result_phred, char * seq, char* seqQ, int** jump_to, int dim, int start, int start_limit, int end_limit)
 {
             int i;
     int pos = start;
     double temp_phred;
+    
+    double total_phred = 0.0;
+    double total_error = 0.0;
+    
+    
+    double * temp_qual = (double*)calloc(strlen(seqQ), sizeof(double) );
+    
+    
+    for(i = dim-1 ; i >= start_limit ; i--){
+        
+        if(i < end_limit)
+        {
+//          if we already encountered a hit here
+            if(result_seq[pos]){
+//                 double temp_phred;
+//             result_seq[pos] = combine(result_seq[pos], seq[i]);
+            result_seq[pos] = combine_exact(&temp_phred, result_seq[pos], temp_qual[pos], seq[i], cQ2P(seqQ[i]));
+            result_phred[pos] = Q2C( P2Q(temp_phred) );
+            temp_qual[pos] = temp_phred;
+            }else{//If this is the first hit for the position
+                result_seq[pos] = seq[i];
+//                 result_phred[pos] = cQ2P(seqQ[i]);
+                result_phred[pos] = seqQ[i];
+                temp_qual[pos] = cQ2P(seqQ[i]);
+            }
+        }
+        
+        if(jump_to[pos][i] > 0){
+         pos = jump_to[pos][i];
+        }else{
+         pos--;   
+        }
+    }
+        
+        
+        
+    char * temp = strdup(seq);
+    char * temp_phred_score = strdup(seqQ);            
+
+    int count = 0;
+    
+        for(i = 0 ; i < dim; i++)
+        {
+         if(result_seq[i])
+         {
+          temp[count] = result_seq[i];
+          temp_phred_score[count] = result_phred[i];
+          total_phred += P2Q(temp_qual[i]);
+          total_error += temp_qual[i];
+          count++;
+         }
+        }
+        temp[count] = '\0';
+        temp_phred_score[count] = '\0';
+        
+        
+        
+        
+        
+        if(count>0){
+        total_phred = total_phred/(double)count;
+        total_error = total_error/(double)count;
+        
+//         if(total_phred>120){
+//             print_selective("before: mean_errors %f, mean_phred %f , count %u\n", rv->mean_errors, rv->mean_phred, rv->curent_count);
+//         }
+        
+        //         print_selective("%f %f\n", total_error, total_phred);
+        rv->mean_errors = (rv->mean_errors*rv->curent_count + total_error)/(double)(rv->curent_count+1);
+        rv->mean_phred = (rv->mean_phred*rv->curent_count + total_phred)/(double)(rv->curent_count+1);
+        
+        
+        rv->curent_count = rv->curent_count+1;
+                
+//         if(rv->mean_phred>120){
+//             print_selective("after: mean_errors %f, mean_phred %f , count %u\n", rv->mean_errors, rv->mean_phred, rv->curent_count);
+//         print_selective("total_errors %.20f, total_phred %f \n\n", total_error, total_phred);
+//         }
+        }
+        
+        
+        
+        
+        
+        
+        for(i = 0 ; i < dim+1; i++)
+        {
+            result_seq[i] = temp[i];
+            result_phred[i] = temp_phred_score[i];
+            
+        }
+        
+        
+        if(strlen(result_seq) != strlen(result_phred)){
+        print_selective("dim: %d, count: %d\n", dim, count);
+            assert( strlen(result_seq) == strlen(result_phred) );
+        }
+        
+
+
+//         print_selective("%f %f\n\n", rv->mean_errors, rv->mean_phred);
+        
+        free(temp);
+        free(temp_phred_score);
+        free(temp_qual);
+//                 print_selective("\n%s\n", result_seq);
+}
+
+void BACKUP_findConsensusReplicates(char* result_seq, char* result_phred, char * seq, char* seqQ, int** jump_to, int dim, int start, int start_limit, int end_limit)
+{
+            int i;
+    int pos = start;
+    double temp_phred;
+    
+    
     
     for(i = dim-1 ; i >= start_limit ; i--){
         
@@ -519,7 +633,7 @@ int findEndReplicates(char *seq, unsigned int seq_length, double match, double m
 }
 
 // Finds the consensus of cirseq data reads. Returns the number of replicates found.
-int alignReplicates(setting arg, char* result, char * result_phred, char *seq, char* seqQ, unsigned int seq_length){
+int alignReplicates(setting arg, resultsVector* rv, char* result, char * result_phred, char *seq, char* seqQ, unsigned int seq_length){
     
     int i;
     
@@ -563,7 +677,7 @@ int alignReplicates(setting arg, char* result, char * result_phred, char *seq, c
     
     
      char* result_seq = (char*)calloc(seq_length+1, sizeof(char));
-    findConsensusReplicates(result_seq, result_phred, seq, seqQ, jump_to, seq_length, which_max[seq_length-1], start, end);
+    findConsensusReplicates(rv, result_seq, result_phred, seq, seqQ, jump_to, seq_length, which_max[seq_length-1], start, end);
     
       
 //     print_selective("Start: %d End: %d\n", start, end);

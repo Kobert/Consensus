@@ -145,9 +145,11 @@ print_selective("\t Total trimmed ratio: %.4f (Fraction of sites)\n\n",(double)g
   print_selective("\n\t Average length of cirseq consensus sequences: %.2f\n", (rv.cir_total_length/(double)rv.cir_num) );
   print_selective("\t Average number of replicates per cirseq read: %.2f\n", (rv.cir_foldings/(double)rv.cir_num));
 
-  if(arg.referenceFile){
-   print_selective("\n\t Resulting average coverage on reference: %.2f\n", rv.on_ref_total_length/(double)globalVar.referenceSequenceLength);   
-  }
+  print_selective("\nAverage error rate for cirseq reads:  %f\n", rv.mean_errors);
+//     print_selective("Average Phred score for cirseq reads: %f\n", rv.mean_phred);
+//   if(arg.referenceFile){
+//    print_selective("\n\t Resulting average coverage on reference: %.2f\n", rv.on_ref_total_length/(double)globalVar.referenceSequenceLength);   
+//   }
   
   print_selective("\n");
   

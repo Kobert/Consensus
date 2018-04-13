@@ -873,6 +873,11 @@ void initResults(resultsVector *rv, unsigned int length)
    rv->cir_num          = 0;
    rv->on_ref_num       = 0;
    rv->on_ref_total_length = 0;
+   
+   rv->mean_errors= 0.0;
+   rv->mean_phred = 0.0;
+   
+   rv->curent_count = 0;
 }
 
 

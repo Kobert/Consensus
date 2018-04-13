@@ -153,7 +153,7 @@ void cirseqReadsWithKey(setting arg, globalVariables *globalVar, resultsVector *
         
         
         
-        int repeat_number = alignReplicates(arg, consensus, consensus_phred, seq, seqQ, strlen(seq));
+        int repeat_number = alignReplicates(arg, rv, consensus, consensus_phred, seq, seqQ, strlen(seq));
         char* original_consensus = strdup(consensus);
         
         if(repeat_number > 1){

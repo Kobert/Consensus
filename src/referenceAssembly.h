@@ -277,6 +277,10 @@ typedef struct
    unsigned int on_ref_num;
    unsigned int on_ref_total_length;
    
+   double mean_errors;
+   double mean_phred;
+   
+   unsigned int curent_count;
    
    
 }resultsVector;

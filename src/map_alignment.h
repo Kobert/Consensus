@@ -19,7 +19,7 @@ typedef struct cstack_s
 
 char combine_exact(double * result_p_error, char c, double p_error_c, char s, double p_error_s);
 
-int alignReplicates(setting arg, char* result, char * result_phred, char *seq, char* seqQ, unsigned int seq_length);
+int alignReplicates(setting arg, resultsVector *rv, char* result, char * result_phred, char *seq, char* seqQ, unsigned int seq_length);
 
 int alignSingleDeletion(unsigned int length, char* ref1, char* ref2, char* read);
 

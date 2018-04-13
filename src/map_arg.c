@@ -14,10 +14,16 @@
  
 #include  "map_arg.h"
  
+ 
+ void version(){
+      printf("\n"); 
+       printf("This is the CirSeq Consensus finder v. 1.0.0\n\n"); 
+ }
+ 
  void map_help()
  {
-  printf("\n"); 
-  printf("This is the CirSeq Consensus finder v. 0.0.1\n\n"); 
+ 
+  version();
   printf("Function arguments are:\n"); 
   printf("\n"); 
   printf(" -r <string>            for specifying a file containing the reference sequence (fasta format only)\n");    
@@ -82,7 +88,7 @@
   s.qFloor = -1;
 
 
-  while ((c = getopt (argc, argv, "cdef:ghmr:s:tpw:o:q:xyz")) != -1)
+  while ((c = getopt (argc, argv, "cdef:ghmr:s:tpw:o:q:vxyz")) != -1)
   {          
     switch (c)
       {
@@ -156,6 +162,10 @@
       case 'q':
         s.qFloor = atoi(optarg);
         break;	
+      case 'v':
+          version();
+          exit(0);
+          break;
       case 'w':
         s.windows = atoi(optarg);
 	fprintf(stderr, "[ERROR:] Feature '-w' not live yet! Aborting analysis.");
@@ -318,13 +328,13 @@
   s.qFloor = -1;
 
 
-  while ((c = getopt (argc, argv, "hr:s:")) != -1)
+  while ((c = getopt (argc, argv, "hr:s:v")) != -1)
   {          
     switch (c)
       {
       case 'h':
 	map_help();
-	exit(1);
+	exit(0);
 	break;
       case 'r':
         if(!s.referenceFile) //This is mostly needed for historic reasons. Everything should now work with multi_referenceFiles
@@ -355,6 +365,10 @@
       case 's':
         s.readsFile = strdup(optarg);
         break;
+      case 'v':
+          version();
+          exit(0);
+          break;
       case '?':
         if (optopt == 's' || optopt == 'r' )
 	{
